@@ -93,7 +93,7 @@ end
 
 # These gcc style flags are also supported by clang and xcode compilers,
 # so we'll use a does-it-work test instead of an is-it-gcc test.
-gcc_flags = ' -Wall -funroll-loops'
+gcc_flags = ' -Wall -funroll-loops -O0'
 if try_link('int main() {return 0;}', gcc_flags)
   $CFLAGS << gcc_flags
 end

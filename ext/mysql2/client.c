@@ -441,7 +441,9 @@ static VALUE rb_mysql_client_async_result(VALUE self) {
   current = rb_hash_dup(rb_iv_get(self, "@current_query_options"));
   RB_GC_GUARD(current);
   Check_Type(current, T_HASH);
-  resultObj = rb_mysql_result_to_obj(self, wrapper->encoding, current, result);
+  resultObj = rb_mysql_result_to_obj(self, wrapper->encoding, current, result, NULL);
+  // pass-through query options for result construction later
+  rb_iv_set(resultObj, "@query_options", rb_funcall(rb_iv_get(self, "@query_options"), rb_intern("dup"), 0));
 
   return resultObj;
 }
@@ -1006,7 +1008,9 @@ static VALUE rb_mysql_client_store_result(VALUE self)
   current = rb_hash_dup(rb_iv_get(self, "@current_query_options"));
   RB_GC_GUARD(current);
   Check_Type(current, T_HASH);
-  resultObj = rb_mysql_result_to_obj(self, wrapper->encoding, current, result);
+  resultObj = rb_mysql_result_to_obj(self, wrapper->encoding, current, result, NULL);
+  // pass-through query options for result construction later
+  rb_iv_set(resultObj, "@query_options", rb_funcall(rb_iv_get(self, "@query_options"), rb_intern("dup"), 0));
 
   return resultObj;
 }
