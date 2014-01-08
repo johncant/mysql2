@@ -145,7 +145,7 @@ static VALUE execute(int argc, VALUE *argv, VALUE self) {
   unsigned long bind_count;
   long i;
   MYSQL_STMT* stmt;
-  MYSQL_RES *result;
+  MYSQL_RES *metadata;
   VALUE resultObj;
   GET_STATEMENT(self);
   
@@ -251,23 +251,30 @@ static VALUE execute(int argc, VALUE *argv, VALUE self) {
   if (bind_count > 0) {
     FREE_BINDS;
   }
-  
-  result = mysql_stmt_result_metadata(stmt);
-  if(result == NULL) {
-	if(mysql_stmt_errno(stmt) != 0) {
-	  // FIXME: MARK_CONN_INACTIVE(wrapper->client);
-	  // FIXME: rb_raise_mysql2_stmt_error(self);
-	}
+
+  metadata = mysql_stmt_result_metadata(stmt);
+  if(metadata == NULL) {
+    if(mysql_stmt_errno(stmt) != 0) {
+      // FIXME: MARK_CONN_INACTIVE(wrapper->client);
+      // FIXME: rb_raise_mysql2_stmt_error(self);
+    }
     // no data and no error, so query was not a SELECT
     return Qnil;
   }
 
-  GET_CLIENT(wrapper->client);
+  // FIXME: don't do this if streaming opt.
+  if (mysql_stmt_store_result(stmt)) {
+    rb_raise(cMysql2Error, "%s", mysql_stmt_error(stmt));
+  }
+  
+  GET_CLIENT(stmt_wrapper->client);
+
   resultObj = rb_mysql_result_to_obj(
     wrapper->client,
     wrapper->encoding,
     rb_funcall(rb_iv_get(stmt_wrapper->client, "@query_options"), rb_intern("dup"), 0),
-    result, stmt
+    metadata,
+    stmt
   );
 
   return resultObj;
